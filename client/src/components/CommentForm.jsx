@@ -13,7 +13,7 @@ export default function CommentForm({
   }
   const [message, setMessage] = useState(initialValue);
   return (
-    <form onSubmit={(e) => submitHandler(e)}>
+    <form onSubmit={submitHandler}>
       <div className="comment-form-row">
         <textarea
           autoFocus={autoFocus}

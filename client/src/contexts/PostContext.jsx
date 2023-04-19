@@ -1,4 +1,10 @@
-import React, { createContext, useContext, useMemo } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
 import { useAsync } from "../hooks/useAsync";
 import { getPost } from "../services/posts";
 import { useParams } from "react-router-dom";
@@ -15,10 +21,12 @@ export function PostProvider({ children }) {
     execute,
   } = useAsync(() => getPost(id), [id]);
 
+  const [comments, setComments] = useState([]);
+
   const commentsByParentId = useMemo(() => {
-    if (post?.comments == null) return [];
+    if (comments == null) return [];
     const group = {};
-    post.comments.forEach((comment) => {
+    comments.forEach((comment) => {
       // if (!group[comment.parentId]) {
       //   group[comment.parentId] = [];
       // }
@@ -27,7 +35,37 @@ export function PostProvider({ children }) {
       group[comment.parentId].push(comment);
     });
     return group;
+  }, [comments]);
+  useEffect(() => {
+    if (post?.comments == null) return;
+    setComments(post.comments);
   }, [post?.comments]);
+
+  function createLocalComment(comment) {
+    setComments((prevComments) => {
+      return [comment, ...prevComments];
+    });
+  }
+
+  function updateLocalComment(id, message) {
+    setComments((prevComments) => {
+      return prevComments.map((comments) => {
+        if (comments.id === id) {
+          return { ...comments, message };
+        } else {
+          return comments;
+        }
+      });
+    });
+  }
+
+  function deleteLocalComment(id) {
+    setComments((prevComments) => {
+      return prevComments.filter((comments) => {
+        return id !== comments.id;
+      });
+    });
+  }
 
   function getReplie(parentId) {
     return commentsByParentId[parentId];
@@ -39,12 +77,15 @@ export function PostProvider({ children }) {
         post: { id, ...post },
         getReplie,
         rootComment: commentsByParentId[null],
+        createLocalComment,
+        updateLocalComment,
+        deleteLocalComment,
       }}
     >
       {loading ? (
         <h1>Loading...</h1>
       ) : error ? (
-        <h1 className="error-msg">Error</h1>
+        <h1 className="error-msg">{error.statusText}</h1>
       ) : (
         children
       )}

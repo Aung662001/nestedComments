@@ -25,8 +25,8 @@ function useAsyncInternal(fun, dependencies, initialLoading = false) {
         return data;
       })
       .catch((error) => {
-        setError(error);
         setValue(undefined);
+        setError(error);
         return Promise.reject(error);
       })
       .finally(() => {

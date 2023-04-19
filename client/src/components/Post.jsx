@@ -4,23 +4,21 @@ import "../style.css";
 import CommentList from "./CommentList";
 import CommentForm from "./CommentForm";
 import { useAsyncFn } from "../hooks/useAsync";
-import createComment from "../services/comment";
+import { createComment } from "../services/comment";
 
 export default function Post() {
-  const { post, rootComment } = usePost();
+  const { post, rootComment, createLocalComment } = usePost();
   const {
     loading,
     error,
-    execute: submitCommentfn,
+    execute: submitCommentfunction,
   } = useAsyncFn(createComment);
 
   function onCommentCreate(message) {
-    submitCommentfn({ postId: post.id, message })
-      .then((comment) => {
-        console.log(comment);
-      })
-      .catch((err) => {
-        console.error("Errorrrrrr");
+    return submitCommentfunction({ postId: post.id, message })
+      .then(createLocalComment)
+      .catch((error) => {
+        console.log(error);
       });
   }
   return (
