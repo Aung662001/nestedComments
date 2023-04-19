@@ -68,7 +68,7 @@ app.get("/posts/:id", async (req, res) => {
               createdAt: "desc",
             },
             select: {
-              COMMENT_SELECT,
+              ...COMMENT_SELECT,
               _count: { select: { likes: true } },
             },
           },
@@ -78,12 +78,13 @@ app.get("/posts/:id", async (req, res) => {
         const likes = await prisma.like.findMany({
           where: {
             userId: req.cookies.userId,
-            commentId: { in: post.comment.map((comment) => comment.id) },
+            commentId: { in: post.comments.map((comment) => comment.id) },
           },
         });
+        console.log(post.comments);
         return {
           ...post,
-          comment: post.comment.map((comment) => {
+          comment: post.comments.map((comment) => {
             const { _count, ...commentFields } = comment;
             return {
               ...commentFields,
@@ -101,26 +102,34 @@ app.post("/posts/:id/comments", async (req, res) => {
     return res.send(app.httpErrors.badRequest("Message is required"));
   }
   return await commitToDo(
-    prisma.comment.create({
-      data: {
-        message: req.body.message,
-        userId: req.cookies.userId,
-        parentId: req.body.parentId,
-        postId: req.params.id,
-      },
-      select: {
-        id: true,
-        message: true,
-        parentId: true,
-        createdAt: true,
-        user: {
-          select: {
-            id: true,
-            name: true,
+    prisma.comment
+      .create({
+        data: {
+          message: req.body.message,
+          userId: req.cookies.userId,
+          parentId: req.body.parentId,
+          postId: req.params.id,
+        },
+        select: {
+          id: true,
+          message: true,
+          parentId: true,
+          createdAt: true,
+          user: {
+            select: {
+              id: true,
+              name: true,
+            },
           },
         },
-      },
-    })
+      })
+      .then((comment) => {
+        return {
+          ...comment,
+          likeCount: 0,
+          likeByMe: false,
+        };
+      })
   );
 });
 
@@ -138,21 +147,13 @@ app.put("/posts/:postId/comments/:commentId", async (req, res) => {
     return res.send(app.httpErrors.unauthorized("You don't have Permession!"));
   }
   return await commitToDo(
-    prisma.comment
-      .update({
-        where: {
-          id: req.params.commentId,
-        },
-        select: { message: true },
-        data: { message: req.body.message },
-      })
-      .then((comment) => {
-        return {
-          ...comment,
-          likeCount: 0,
-          likeByMe: false,
-        };
-      })
+    prisma.comment.update({
+      where: {
+        id: req.params.commentId,
+      },
+      select: { message: true },
+      data: { message: req.body.message },
+    })
   );
 });
 
