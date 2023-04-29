@@ -52,14 +52,56 @@ app.get("/posts", async (req, res) => {
   );
 });
 
+// app.get("/posts/:id", async (req, res) => {
+//   // console.log(req.params.id);
+//   return await commitToDo(
+//     prisma.post
+//       .findUnique({
+//         where: {
+//           id: req.params.id,
+//         },
+//         select: {
+//           body: true,
+//           title: true,
+//           comments: {
+//             orderBy: {
+//               createdAt: "desc",
+//             },
+//             select: {
+//               ...COMMENT_SELECT,
+//               _count: { select: { likes: true } },
+//             },
+//           },
+//         },
+//       })
+//       .then(async (post) => {
+//         const likes = await prisma.like.findMany({
+//           where: {
+//             userId: req.cookies.userId,
+//             commentId: { in: post.comments.map((comment) => comment.id) },
+//           },
+//         });
+//         console.log(post.comments);
+//         return {
+//           ...post,
+//           comment: post.comments.map((comment) => {
+//             const { _count, ...commentFields } = comment;
+//             return {
+//               ...commentFields,
+//               likeByMe: likes.find((like) => like.commentId === comment.id),
+//               likeCount: _count.likes,
+//               test: "hello",
+//             };
+//           }),
+//         };
+//       })
+//   );
+// });
 app.get("/posts/:id", async (req, res) => {
-  // console.log(req.params.id);
   return await commitToDo(
     prisma.post
       .findUnique({
-        where: {
-          id: req.params.id,
-        },
+        where: { id: req.params.id },
         select: {
           body: true,
           title: true,
@@ -81,14 +123,14 @@ app.get("/posts/:id", async (req, res) => {
             commentId: { in: post.comments.map((comment) => comment.id) },
           },
         });
-        console.log(post.comments);
+
         return {
           ...post,
-          comment: post.comments.map((comment) => {
+          comments: post.comments.map((comment) => {
             const { _count, ...commentFields } = comment;
             return {
               ...commentFields,
-              likeByMe: likes.find((like) => like.commentId === comment.id),
+              likedByMe: likes.find((like) => like.commentId === comment.id),
               likeCount: _count.likes,
             };
           }),

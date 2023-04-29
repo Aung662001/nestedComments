@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { IconBtn } from "./IconBtn";
-import { FaHeart, FaTrash, FaReply, FaEdit } from "react-icons/fa";
+import { FaHeart, FaTrash, FaReply, FaEdit, FaRegHeart } from "react-icons/fa";
 import { usePost } from "../contexts/PostContext";
 import CommentList from "./CommentList";
 import "../style.css";
@@ -16,7 +16,15 @@ const dateTimeFormatter = new Intl.DateTimeFormat(undefined, {
   dateStyle: "medium",
   timeStyle: "short",
 });
-export default function Comment({ id, message, createdAt, parentId, user }) {
+export default function Comment({
+  id,
+  message,
+  createdAt,
+  parentId,
+  user,
+  likeCount,
+  likeByMe,
+}) {
   const [isReplying, setIsReplying] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const { id: userId, name: userName } = user;
@@ -27,6 +35,7 @@ export default function Comment({ id, message, createdAt, parentId, user }) {
     updateLocalComment,
     deleteLocalComment,
   } = usePost();
+  console.log(likeCount);
   const createCommentFn = useAsyncFn(createComment);
   const commentUpdatefn = useAsyncFn(updateComment);
   const deleteCommentFn = useAsyncFn(deleteComment);
@@ -77,8 +86,12 @@ export default function Comment({ id, message, createdAt, parentId, user }) {
           <div className="message">{message}</div>
         )}
         <div className="footer">
-          <IconBtn Icon={FaHeart} aria-label="Like">
-            2
+          <IconBtn
+            Icon={likeByMe ? FaHeart : FaRegHeart}
+            aria-label={likeByMe ? "Unlike" : "Like"}
+            // onClick={}
+          >
+            {likeCount}
           </IconBtn>
           <IconBtn
             Icon={FaReply}
